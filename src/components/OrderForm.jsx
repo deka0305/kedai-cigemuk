@@ -45,7 +45,7 @@ function OrderForm() {
         <p style={{ fontSize:11,letterSpacing:4,textTransform:'uppercase',color:'#C4703F',fontWeight:600,marginBottom:6 }}>✦ Order Sekarang</p>
         <h2 style={{ fontFamily:'Georgia,serif',fontSize:'clamp(2rem,4vw,3rem)',fontWeight:700,color:'#3E1A06',marginBottom:8 }}>Isi <em style={{ color:'#C4703F' }}>Pesanan</em> Kamu</h2>
         <div style={{ width:60,height:3,background:'#D4943A',borderRadius:4,marginBottom:'2.5rem' }}/>
-        <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2.5rem' }}>
+        <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:'2rem' }}>
           <div>
             <div style={{ background:'#FFF9F0',borderRadius:16,border:'1px solid #E8D5B0',padding:'1.5rem',marginBottom:'1.2rem' }}>
               <div style={{ fontFamily:'Georgia,serif',fontSize:'1.05rem',fontWeight:700,color:'#3E1A06',paddingBottom:'0.75rem',borderBottom:'1px dashed #E8D5B0',marginBottom:'0.75rem' }}>🛒 Ringkasan Pesanan</div>
@@ -94,9 +94,6 @@ function OrderForm() {
             </div>
             <button onClick={()=>handleOrder('wa')} disabled={loading} style={{ background:'#25D366',color:'white',border:'none',padding:14,borderRadius:12,cursor:'pointer',fontFamily:'Georgia,serif',fontSize:'1rem',fontWeight:600,width:'100%',marginBottom:'0.75rem',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
               💬 Pesan via WhatsApp
-            </button>
-            <button onClick={()=>handleOrder('direct')} disabled={loading} style={{ background:'#C4703F',color:'#F5EDD6',border:'none',padding:13,borderRadius:100,cursor:'pointer',fontFamily:'Georgia,serif',fontSize:'1rem',fontWeight:600,width:'100%' }}>
-              {loading?'Mengirim...':'Kirim Pesanan →'}
             </button>
           </div>
         </div>

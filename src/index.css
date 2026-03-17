@@ -3,3 +3,6 @@ body{font-family:'Georgia',serif;background:#F5EDD6;color:#2E1004;min-height:100
 #root{width:100%;min-height:100vh;}
 button{cursor:pointer;font-family:'Georgia',serif;}
 input,textarea,select{font-family:'Georgia',serif;}
+@media (max-width: 640px) {
+  section { padding-left: 1rem !important; padding-right: 1rem !important; }
+}
