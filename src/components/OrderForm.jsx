@@ -76,7 +76,7 @@ function OrderForm() {
             <div style={{ marginBottom:'1rem' }}>
               <label style={{ fontSize:'0.78rem',fontWeight:600,letterSpacing:1.5,textTransform:'uppercase',color:'#6B3A1F',display:'block',marginBottom:7 }}>Waktu Pengiriman</label>
               <select style={inp} value={form.waktu} onChange={e=>setForm({...form,waktu:e.target.value})}>
-                {['Secepatnya (±30 menit)','Pukul 15.00','Pukul 16.00','Pukul 17.00','Pukul 18.00','Pukul 19.00'].map(w=><option key={w}>{w}</option>)}
+                {['Secepatnya (±30 menit)','Pukul 10.00','Pukul 11.00','Pukul 12.00','Pukul 13.00','Pukul 14.00','Pukul 15.00','Pukul 16.00','Pukul 17.00','Pukul 18.00','Pukul 19.00','Pukul 20.00','Pukul 21.00','Pukul 22.00'].map(w=><option key={w}>{w}</option>)}
               </select>
             </div>
             <div style={{ marginBottom:'1rem' }}>
