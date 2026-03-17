@@ -17,7 +17,7 @@ function Footer() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
                 { icon: '📍', label: 'Alamat', val: 'Jl. H. Aba, RT.006/RW.003, Panunggangan Utara, Kec. Pinang, Kota Tangerang, Banten 15143' },
-                { icon: '📞', label: 'Telepon / WhatsApp', val: '0896-6375-8497' },
+                { icon: '📞', label: 'Telepon / WhatsApp', val: '0896-6375-8497 / +62 896-6732-9000' },
                 { icon: '🕐', label: 'Jam Buka', val: 'Senin–Kamis & Sabtu–Minggu\n15.00 – 20.00 WIB' },
                 { icon: '🔴', label: 'Hari Libur', val: 'Jumat' },
               ].map(({ icon, label, val }) => (
