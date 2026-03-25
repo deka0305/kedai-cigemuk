@@ -9,12 +9,14 @@ function OrderForm() {
   const [loading, setLoading] = useState(false);
   const [sukses, setSukses] = useState(false);
   const cartEntries = Object.entries(cart);
-  const total = cartEntries.reduce((sum,[id,qty]) => { const item = menuItems.find(m=>m.id===id); return sum+(item?.price||0)*qty; },0);
+  const subtotal = cartEntries.reduce((sum,[id,qty]) => { const item = menuItems.find(m=>m.id===id); return sum+(item?.price||0)*qty; },0);
+  const ongkir = form.metode === 'delivery' ? 20000 : 0;
+  const total = subtotal + ongkir;
   const inp = { background:'#FFF9F0',border:'1.5px solid #E8D5B0',borderRadius:10,padding:'11px 15px',fontFamily:'Georgia,serif',fontSize:'0.93rem',color:'#2E1004',outline:'none',width:'100%' };
 
   function buildWA() {
     const items = cartEntries.map(([id,qty]) => { const it=menuItems.find(m=>m.id===id); return `• ${it.name} ×${qty} = Rp ${(it.price*qty).toLocaleString('id-ID')}`; }).join('\n');
-    return `Halo Kedai Cigemuk! 🥟\n\n*Pesanan Baru*\nNama: ${form.nama}\nWA: ${form.wa}\n\n*Detail:*\n${items}\n*Total: Rp ${total.toLocaleString('id-ID')}*\n\nPengiriman: ${form.metode==='pickup'?'Ambil Sendiri':'Delivery'}${form.metode==='delivery'?'\nAlamat: '+form.alamat:''}\nWaktu: ${form.waktu}\nPembayaran: ${form.bayar}${form.catatan?'\nCatatan: '+form.catatan:''}`;
+    return `Halo Kedai Cigemuk! 🥟\n\n*Pesanan Baru*\nNama: ${form.nama}\nWA: ${form.wa}\n\n*Detail:*\n${items}\n${form.metode === 'delivery' ? '• Ongkos Kirim = Rp 20.000\n' : '• Ongkos Kirim = Gratis (Pickup)\n'}*Total: Rp ${total.toLocaleString('id-ID')}*\n\n${form.catatan}`;
   }
 
   async function handleOrder(via) {
@@ -24,7 +26,7 @@ function OrderForm() {
     setLoading(true);
     await simpanOrder({...form,items:cart,total});
     setLoading(false);
-    if(via==='wa') window.open(`https://wa.me/6289667329000?text=${encodeURIComponent(buildWA())}`,'_blank');
+    if(via==='wa') window.open(`https://wa.me/6289663758497?text=${encodeURIComponent(buildWA())}`,'_blank');
     setSukses(true);
   }
 
@@ -51,7 +53,21 @@ function OrderForm() {
               <div style={{ fontFamily:'Georgia,serif',fontSize:'1.05rem',fontWeight:700,color:'#3E1A06',paddingBottom:'0.75rem',borderBottom:'1px dashed #E8D5B0',marginBottom:'0.75rem' }}>🛒 Ringkasan Pesanan</div>
               {!cartEntries.length ? <p style={{ textAlign:'center',color:'#9C7A5A',fontStyle:'italic',padding:'1.5rem 0',fontSize:'0.88rem' }}>Belum ada item dipilih.<br/>Pilih menu di atas dulu ya!</p> : <>
                 {cartEntries.map(([id,qty]) => { const it=menuItems.find(m=>m.id===id); return <div key={id} style={{ display:'flex',justifyContent:'space-between',padding:'7px 0',fontSize:'0.88rem',color:'#6B3A1F' }}><span>{it.emoji} {it.name} ×{qty}</span><strong style={{ color:'#3E1A06' }}>Rp {(it.price*qty).toLocaleString('id-ID')}</strong></div>; })}
-                <div style={{ display:'flex',justifyContent:'space-between',paddingTop:'0.75rem',marginTop:'0.5rem',borderTop:'2px solid #E8D5B0',fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:700,color:'#C4703F' }}><span>Total</span><span>Rp {total.toLocaleString('id-ID')}</span></div>
+                {form.metode === 'delivery' && (
+              <div style={{ display:'flex',justifyContent:'space-between',padding:'7px 0',fontSize:'0.88rem',color:'#6B3A1F' }}>
+                <span>🚚 Ongkos Kirim</span>
+                <strong style={{ color:'#3E1A06' }}>Rp 20.000</strong>
+              </div>
+            )}
+            {form.metode === 'pickup' && (
+              <div style={{ display:'flex',justifyContent:'space-between',padding:'7px 0',fontSize:'0.88rem',color:'#6B3A1F' }}>
+                <span>🏪 Ongkos Kirim</span>
+                <strong style={{ color:'#2E7D32' }}>Gratis</strong>
+              </div>
+            )}
+            <div style={{ display:'flex',justifyContent:'space-between',paddingTop:'0.75rem',marginTop:'0.5rem',borderTop:'2px solid #E8D5B0',fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:700,color:'#C4703F' }}>
+              <span>Total</span><span>Rp {total.toLocaleString('id-ID')}</span>
+            </div>
               </>}
             </div>
             {[['nama','Nama Lengkap','text','Nama kamu...'],['wa','No. WhatsApp','tel','0896-xxxx-xxxx']].map(([id,label,type,ph]) => (
