@@ -5,7 +5,7 @@ import { simpanOrder } from '../services/orderService';
 
 function OrderForm() {
   const { cart } = useCart();
-  const [form, setForm] = useState({ nama:'',wa:'',metode:'delivery',alamat:'',waktu:'Secepatnya (±30 menit)',bayar:'COD (Bayar di Tempat)',catatan:'' });
+  const [form, setForm] = useState({ nama:'',wa:'',metode:'delivery',alamat:'',tanggal:'',waktu:'Secepatnya (±30 menit)',bayar:'COD (Bayar di Tempat)',catatan:'' });
   const [loading, setLoading] = useState(false);
   const [sukses, setSukses] = useState(false);
   const cartEntries = Object.entries(cart);
@@ -16,7 +16,7 @@ function OrderForm() {
 
   function buildWA() {
     const items = cartEntries.map(([id,qty]) => { const it=menuItems.find(m=>m.id===id); return `• ${it.name} ×${qty} = Rp ${(it.price*qty).toLocaleString('id-ID')}`; }).join('\n');
-    return `Halo Kedai Cigemuk! 🥟\n\n*Pesanan Baru*\nNama: ${form.nama}\nWA: ${form.wa}\n\n*Detail:*\n${items}\n${form.metode === 'delivery' ? '• Ongkos Kirim = Rp 20.000\n' : '• Ongkos Kirim = Gratis (Pickup)\n'}*Total: Rp ${total.toLocaleString('id-ID')}*\n\n${form.catatan}`;
+    return `Halo Kedai Cigemuk! 🥟\n\n*Pesanan Baru*\nNama: ${form.nama}\nWA: ${form.wa}\nMetode: ${form.metode}\n${form.metode === 'delivery' ? `Tanggal Antar: ${form.tanggal || '-'}\nAlamat: ${form.alamat || '-'}\n` : ''}Waktu: ${form.waktu}\nPembayaran: ${form.bayar}\n\n*Detail:*\n${items}\n${form.metode === 'delivery' ? '• Ongkos Kirim = Rp 20.000\n' : '• Ongkos Kirim = Gratis (Pickup)\n'}*Total: Rp ${total.toLocaleString('id-ID')}*\n\nCatatan: ${form.catatan || '-'}`;
   }
 
   async function handleOrder(via) {
@@ -83,10 +83,19 @@ function OrderForm() {
                 <option value="pickup">🏪 Ambil Sendiri</option>
               </select>
             </div>
-            {form.metode==='delivery' && <div style={{ marginBottom:'1rem' }}>
-              <label style={{ fontSize:'0.78rem',fontWeight:600,letterSpacing:1.5,textTransform:'uppercase',color:'#6B3A1F',display:'block',marginBottom:7 }}>Alamat Lengkap</label>
-              <textarea style={{ ...inp,minHeight:80,resize:'vertical' }} value={form.alamat} onChange={e=>setForm({...form,alamat:e.target.value})} placeholder="Jl., RT/RW, Kelurahan..."/>
-            </div>}
+            {form.metode==='delivery' && <>
+              <div style={{ marginBottom:'1rem',background:'#FFF9F0',borderRadius:12,border:'1px solid #E8D5B0',padding:'0.9rem 1rem',fontSize:'0.82rem',color:'#6B3A1F',lineHeight:1.6 }}>
+                🚚 Layanan antar hanya tersedia untuk area Tangerang tertentu dan menyesuaikan jarak pengantaran.
+              </div>
+              <div style={{ marginBottom:'1rem' }}>
+                <label style={{ fontSize:'0.78rem',fontWeight:600,letterSpacing:1.5,textTransform:'uppercase',color:'#6B3A1F',display:'block',marginBottom:7 }}>Tanggal Pengiriman</label>
+                <input type="date" style={inp} value={form.tanggal} onChange={e=>setForm({...form,tanggal:e.target.value})}/>
+              </div>
+              <div style={{ marginBottom:'1rem' }}>
+                <label style={{ fontSize:'0.78rem',fontWeight:600,letterSpacing:1.5,textTransform:'uppercase',color:'#6B3A1F',display:'block',marginBottom:7 }}>Alamat Lengkap</label>
+                <textarea style={{ ...inp,minHeight:80,resize:'vertical' }} value={form.alamat} onChange={e=>setForm({...form,alamat:e.target.value})} placeholder="Jl., RT/RW, Kelurahan..." required/>
+              </div>
+            </>}
           </div>
           <div>
             <div style={{ marginBottom:'1rem' }}>
