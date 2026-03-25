@@ -26,7 +26,7 @@ function OrderForm() {
     setLoading(true);
     await simpanOrder({ ...form, items: cart, total });
     setLoading(false);
-    if (via === 'wa') window.open(`https://wa.me/6289663758497?text=${encodeURIComponent(buildWA())}`, '_blank');
+    if (via === 'wa') window.open(`https://wa.me/6289667329000?text=${encodeURIComponent(buildWA())}`, '_blank');
     setSukses(true);
   }
 
