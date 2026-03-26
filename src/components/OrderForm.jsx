@@ -60,6 +60,7 @@ ${form.metode === 'delivery' ? `Tanggal Antar: ${form.tanggal || '-'}
 Alamat: ${form.alamat || '-'}
 ` : ''}Waktu: ${form.waktu}
 Pembayaran: ${form.bayar}
+Tanggal Pesanan: ${form.tanggal || '-'}\n
 
 *Detail:*
 ${items}
@@ -72,7 +73,11 @@ Catatan: ${form.catatan || '-'}`;
     if (!form.nama) return alert('Nama tidak boleh kosong!');
     if (!form.wa) return alert('Nomor WhatsApp tidak boleh kosong!');
     if (!cartEntries.length) return alert('Pilih minimal 1 menu dulu!');
+    if (!form.tanggal) return alert('Pilih tanggal pengantaran/pickup!');
+    if (form.metode === 'delivery' && !form.alamat) return alert('Alamat tidak boleh kosong untuk pengantaran!');
+          
 
+          
     setLoading(true);
     const result = await simpanOrder({ ...form, items: cart, total });
     setLoading(false);
@@ -102,6 +107,7 @@ Catatan: ${form.catatan || '-'}`;
             onClick={() => {
               setSukses(false);
               setOrderNumber(null);
+              window.location.reload();
             }}
             style={{ background: '#C4703F', color: '#F5EDD6', border: 'none', padding: '14px 32px', borderRadius: 100, cursor: 'pointer', width: '100%', fontFamily: 'Georgia,serif', fontSize: '1rem', fontWeight: 600 }}
           >
