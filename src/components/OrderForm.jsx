@@ -231,7 +231,7 @@ Catatan: ${form.catatan || '-'}`;
             </div>
 
             <div style={{ background: '#FFF9F0', borderRadius: 12, border: '1px solid #E8D5B0', padding: '1rem', marginBottom: '1rem', fontSize: '0.82rem', color: '#9C7A5A', fontStyle: 'italic', lineHeight: 1.6 }}>
-              💡 Pesanan diteruskan via WhatsApp. Konfirmasi dalam +/-5 menit.
+              💡 Pesanan harus diteruskan via WhatsApp. Konfirmasi dalam +/-5 menit.
             </div>
 
             <button
