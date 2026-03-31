@@ -227,7 +227,7 @@ Catatan: ${form.catatan || '-'}`;
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ fontSize: '0.78rem', fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', color: '#6B3A1F', display: 'block', marginBottom: 7 }}>Catatan</label>
-              <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.catatan} onChange={(e) => updateForm('catatan', e.target.value)} placeholder="Level pedas, mix isian, dll..." />
+              <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.catatan} onChange={(e) => updateForm('catatan', e.target.value)} placeholder="Level pedas, mix isian, mau versi mentah, dll..." />
             </div>
 
             <div style={{ background: '#FFF9F0', borderRadius: 12, border: '1px solid #E8D5B0', padding: '1rem', marginBottom: '1rem', fontSize: '0.82rem', color: '#9C7A5A', fontStyle: 'italic', lineHeight: 1.6 }}>
