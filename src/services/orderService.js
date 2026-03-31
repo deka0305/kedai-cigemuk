@@ -46,7 +46,6 @@ export async function simpanOrder(dataOrder) {
     const docRef = await addDoc(collection(db, 'orders'), {
       ...dataOrder,
       orderNumber,
-      status: 'pending',
       createdAt: serverTimestamp()
     });
 
