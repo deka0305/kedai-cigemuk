@@ -200,7 +200,7 @@ Catatan: ${form.catatan || '-'}`;
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
                   <label style={{ fontSize: '0.78rem', fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', color: '#6B3A1F', display: 'block', marginBottom: 7 }}>Alamat Lengkap</label>
-                  <textarea style={{ ...inp, minHeight: 80, resize: 'vertical' }} value={form.alamat} onChange={(e) => updateForm('alamat', e.target.value)} placeholder="Jl., RT/RW, Kelurahan..." required />
+                  <textarea style={{ ...inp, minHeight: 80, resize: 'vertical' }} value={form.alamat} onChange={(e) => updateForm('alamat', e.target.value)} placeholder="Jl., RT/RW, Kelurahan... Atau Share lokasi di WhatsApp" required />
                 </div>
               </>
             )}
