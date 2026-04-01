@@ -1,5 +1,17 @@
 import { db } from '../firebase';
-import { addDoc, collection, getDocs, limit, orderBy, query, serverTimestamp } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc
+} from 'firebase/firestore';
 
 const LOCAL_COUNTER_KEY = 'kedai-cigemuk-order-counter';
 
@@ -45,8 +57,10 @@ export async function simpanOrder(dataOrder) {
 
     const docRef = await addDoc(collection(db, 'orders'), {
       ...dataOrder,
+      status: dataOrder.status || 'baru',
       orderNumber,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
 
     saveLocalOrderNumber(orderNumber);
@@ -55,4 +69,28 @@ export async function simpanOrder(dataOrder) {
   } catch (error) {
     return { success: false, error: error.message };
   }
+}
+
+export function subscribeOrders(callback) {
+  const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+
+  return onSnapshot(ordersQuery, (snapshot) => {
+    const orders = snapshot.docs.map((orderDoc) => ({
+      id: orderDoc.id,
+      ...orderDoc.data()
+    }));
+
+    callback(orders);
+  });
+}
+
+export async function updateOrderById(orderId, data) {
+  await updateDoc(doc(db, 'orders', orderId), {
+    ...data,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function deleteOrderById(orderId) {
+  await deleteDoc(doc(db, 'orders', orderId));
 }

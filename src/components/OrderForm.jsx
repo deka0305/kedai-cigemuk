@@ -78,8 +78,20 @@ Catatan: ${form.catatan || '-'}`;
           
 
           
+    const itemDetails = cartEntries.map(([id, qty]) => {
+      const item = menuItems.find((menu) => menu.id === id);
+
+      return {
+        id,
+        name: item?.name || id,
+        price: item?.price || 0,
+        qty,
+        subtotal: (item?.price || 0) * qty
+      };
+    });
+
     setLoading(true);
-    const result = await simpanOrder({ ...form, items: cart, total });
+    const result = await simpanOrder({ ...form, items: cart, itemDetails, total });
     setLoading(false);
 
     if (!result.success) {

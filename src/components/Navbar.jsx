@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useState } from 'react';
 
@@ -22,6 +23,20 @@ function Navbar() {
           {['menu','tentang','order'].map(id => (
             <span key={id} onClick={() => scrollTo(id)} style={{ cursor:'pointer',color:'#6B3A1F',fontSize:'0.88rem',fontWeight:600,textTransform:'capitalize' }}>{id}</span>
           ))}
+          <Link
+            to="/admin/login"
+            style={{ color:'rgba(107,58,31,0.28)',fontSize:'0.72rem',fontWeight:600,letterSpacing:1.2,textTransform:'uppercase' }}
+            title="Login admin"
+          >
+            akses
+          </Link>
+          {/* <Link
+            to="/admin"
+            style={{ color:'rgba(107,58,31,0.18)',fontSize:'0.72rem',fontWeight:600,letterSpacing:1.2,textTransform:'uppercase' }}
+            title="Dashboard super admin"
+          >
+            panel
+          </Link> */}
         </div>
 
         <div style={{ display:'flex',alignItems:'center',gap:10 }}>
@@ -42,6 +57,22 @@ function Navbar() {
           {['menu','tentang','order'].map(id => (
             <span key={id} onClick={() => scrollTo(id)} style={{ cursor:'pointer',color:'#6B3A1F',fontSize:'1rem',fontWeight:600,textTransform:'capitalize',padding:'0.4rem 0' }}>{id}</span>
           ))}
+          <Link
+            to="/admin/login"
+            onClick={() => setMenuOpen(false)}
+            style={{ color:'rgba(107,58,31,0.34)',fontSize:'0.8rem',fontWeight:600,letterSpacing:1.1,textTransform:'uppercase',padding:'0.25rem 0' }}
+            title="Login admin"
+          >
+            akses
+          </Link>
+          <Link
+            to="/admin"
+            onClick={() => setMenuOpen(false)}
+            style={{ color:'rgba(107,58,31,0.24)',fontSize:'0.8rem',fontWeight:600,letterSpacing:1.1,textTransform:'uppercase',padding:'0.25rem 0' }}
+            title="Dashboard super admin"
+          >
+            panel
+          </Link>
         </div>
       )}
 
