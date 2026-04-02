@@ -70,14 +70,15 @@ Catatan: ${form.catatan || '-'}`;
   }
 
   async function handleOrder(via) {
+    const hasSpecialMenu = cartEntries.some(([id, qty]) => id === 'special' && qty > 0);
+
     if (!form.nama) return alert('Nama tidak boleh kosong!');
     if (!form.wa) return alert('Nomor WhatsApp tidak boleh kosong!');
-    if (!cartEntries.length) return alert('Pilih minimal 1 menu dulu!');
+    if (!cartEntries.length) return alert('Pilih minimal 1 menu dulu! dengan menekan tombol + pada menu yang diinginkan');
     if (!form.tanggal) return alert('Pilih tanggal pengantaran/pickup!');
     if (form.metode === 'delivery' && !form.alamat) return alert('Alamat tidak boleh kosong untuk pengantaran!');
-          
+    if (hasSpecialMenu && !form.catatan.trim()) {return alert('Untuk menu Cireng Kuah Creamy, wajib isi catatan varian rasa.');}
 
-          
     const itemDetails = cartEntries.map(([id, qty]) => {
       const item = menuItems.find((menu) => menu.id === id);
 
@@ -239,7 +240,7 @@ Catatan: ${form.catatan || '-'}`;
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ fontSize: '0.78rem', fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', color: '#6B3A1F', display: 'block', marginBottom: 7 }}>Catatan</label>
-              <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.catatan} onChange={(e) => updateForm('catatan', e.target.value)} placeholder="Mix isian, mau versi mentah, dll..." />
+              <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.catatan} onChange={(e) => updateForm('catatan', e.target.value)} placeholder="Mix Varian Rasa, mau versi mentah, dll..." />
             </div>
 
             <div style={{ background: '#FFF9F0', borderRadius: 12, border: '1px solid #E8D5B0', padding: '1rem', marginBottom: '1rem', fontSize: '0.82rem', color: '#9C7A5A', fontStyle: 'italic', lineHeight: 1.6 }}>
