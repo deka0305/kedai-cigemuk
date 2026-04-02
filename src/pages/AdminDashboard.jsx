@@ -20,6 +20,10 @@ const EMPTY_FORM = {
   status: 'baru'
 };
 
+function getOrderStatus(order) {
+  return order.status || 'pending';
+}
+
 function formatCurrency(value) {
   return Number(value || 0).toLocaleString('id-ID');
 }
@@ -51,7 +55,7 @@ function buildEditForm(order) {
     bayar: order.bayar || 'COD (Bayar di Tempat)',
     catatan: order.catatan || '',
     total: order.total || 0,
-    status: order.status || 'baru'
+    status: getOrderStatus(order)
   };
 }
 
@@ -79,7 +83,7 @@ function AdminDashboard() {
       return orders;
     }
 
-    return orders.filter((order) => order.status === filterStatus);
+    return orders.filter((order) => getOrderStatus(order) === filterStatus);
   }, [filterStatus, orders]);
 
   const selectedOrder = useMemo(
@@ -180,15 +184,23 @@ function AdminDashboard() {
         </article>
         <article className="dashboard-metric">
           <span>Order baru</span>
-          <strong>{orders.filter((order) => order.status === 'baru').length}</strong>
+          <strong>{orders.filter((order) => getOrderStatus(order) === 'baru').length}</strong>
         </article>
         <article className="dashboard-metric">
           <span>Diproses</span>
-          <strong>{orders.filter((order) => order.status === 'diproses').length}</strong>
+          <strong>{orders.filter((order) => getOrderStatus(order) === 'diproses').length}</strong>
         </article>
         <article className="dashboard-metric">
           <span>Selesai</span>
-          <strong>{orders.filter((order) => order.status === 'selesai').length}</strong>
+          <strong>{orders.filter((order) => getOrderStatus(order) === 'selesai').length}</strong>
+        </article>
+        <article className="dashboard-metric">
+          <span>Dibatalkan</span>
+          <strong>{orders.filter((order) => getOrderStatus(order) === 'dibatalkan').length}</strong>
+        </article>
+        <article className="dashboard-metric">
+          <span>Pending</span>
+          <strong>{orders.filter((order) => getOrderStatus(order) === 'pending').length}</strong>
         </article>
       </section>
 
@@ -212,7 +224,10 @@ function AdminDashboard() {
           ) : null}
 
           <div className="dashboard-order-list">
-            {filteredOrders.map((order) => (
+            {filteredOrders.map((order) => {
+              const orderStatus = getOrderStatus(order);
+
+              return (
               <button
                 type="button"
                 key={order.id}
@@ -224,8 +239,8 @@ function AdminDashboard() {
               >
                 <div className="dashboard-order-top">
                   <strong>#{order.orderNumber || '-'}</strong>
-                  <span className={`status-badge status-${order.status || 'baru'}`}>
-                    {order.status || 'baru'}
+                  <span className={`status-badge status-${orderStatus}`}>
+                    {orderStatus}
                   </span>
                 </div>
                 <h3>{order.nama || 'Tanpa nama'}</h3>
@@ -234,7 +249,8 @@ function AdminDashboard() {
                 <p>Rp {formatCurrency(order.total)}</p>
                 <small>{formatDate(order.createdAt)}</small>
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -334,6 +350,7 @@ function AdminDashboard() {
                       setEditForm((current) => ({ ...current, status: event.target.value }))
                     }
                   >
+                    <option value="pending">Pending</option>
                     <option value="baru">Baru</option>
                     <option value="diproses">Diproses</option>
                     <option value="selesai">Selesai</option>

@@ -39,9 +39,13 @@ async function getAdminProfile(uid) {
 }
 
 export async function hasAdminAccount() {
-  const adminQuery = query(collection(db, 'admins'), limit(1));
-  const snapshot = await getDocs(adminQuery);
-  return !snapshot.empty;
+  try {
+    const adminQuery = query(collection(db, 'admins'), limit(1));
+    const snapshot = await getDocs(adminQuery);
+    return !snapshot.empty;
+  } catch {
+    return false;
+  }
 }
 
 export async function loginAdmin(email, password) {
@@ -75,8 +79,7 @@ export function subscribeAdminSession(callback) {
       const adminProfile = await getAdminProfile(user.uid);
 
       if (!adminProfile) {
-        await signOut(auth);
-        callback({ user: null, adminProfile: null, isAdmin: false });
+        callback({ user, adminProfile: null, isAdmin: false });
         return;
       }
 
@@ -88,12 +91,6 @@ export function subscribeAdminSession(callback) {
 }
 
 export async function createInitialAdmin({ nama, email, password }) {
-  const adminExists = await hasAdminAccount();
-
-  if (adminExists) {
-    throw new Error('Admin pertama sudah dibuat. Gunakan halaman login admin.');
-  }
-
   await setPersistence(auth, browserLocalPersistence);
   const credential = await createUserWithEmailAndPassword(auth, email, password);
 

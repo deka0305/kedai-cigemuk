@@ -16,6 +16,38 @@ export function AdminAuthProvider({ children }) {
     isLoading: true
   });
 
+  async function handleLoginAdmin(email, password) {
+    const authSession = await loginAdmin(email, password);
+    setSession({
+      ...authSession,
+      isAdmin: true,
+      isLoading: false
+    });
+
+    return authSession;
+  }
+
+  async function handleLogoutAdmin() {
+    await logoutAdmin();
+    setSession({
+      user: null,
+      adminProfile: null,
+      isAdmin: false,
+      isLoading: false
+    });
+  }
+
+  async function handleCreateInitialAdmin(payload) {
+    const authSession = await createInitialAdmin(payload);
+    setSession({
+      ...authSession,
+      isAdmin: true,
+      isLoading: false
+    });
+
+    return authSession;
+  }
+
   useEffect(() => {
     const unsubscribe = subscribeAdminSession((authSession) => {
       setSession({
@@ -31,9 +63,9 @@ export function AdminAuthProvider({ children }) {
     <AdminAuthContext.Provider
       value={{
         ...session,
-        loginAdmin,
-        logoutAdmin,
-        createInitialAdmin
+        loginAdmin: handleLoginAdmin,
+        logoutAdmin: handleLogoutAdmin,
+        createInitialAdmin: handleCreateInitialAdmin
       }}
     >
       {children}
