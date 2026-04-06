@@ -112,6 +112,26 @@ function formatExportDate(value) {
   return '-';
 }
 
+function formatExportItems(order) {
+  if (Array.isArray(order.itemDetails) && order.itemDetails.length > 0) {
+    return order.itemDetails
+      .map((item) => `${item.name || item.id || 'Item'} x${item.qty || 0}`)
+      .join(' | ');
+  }
+
+  if (order.items && typeof order.items === 'object') {
+    const itemEntries = Object.entries(order.items).filter(([, qty]) => Number(qty) > 0);
+
+    if (itemEntries.length > 0) {
+      return itemEntries
+        .map(([itemId, qty]) => `${itemId} x${qty}`)
+        .join(' | ');
+    }
+  }
+
+  return '-';
+}
+
 export function exportOrdersToExcel(orders) {
   const rows = orders.map((order) => ({
     ID: order.id,
@@ -127,9 +147,7 @@ export function exportOrdersToExcel(orders) {
     Catatan: order.catatan || '-',
     Total: Number(order.total || 0),
     DibuatPada: formatExportDate(order.createdAt),
-    Item: (order.itemDetails || [])
-      .map((item) => `${item.name} x${item.qty}`)
-      .join(', ')
+    Item: formatExportItems(order)
   }));
 
   const worksheet = utils.json_to_sheet(rows);
