@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { menuItems } from '../data/menu';
+import { useMenu } from '../context/MenuContext';
 import { simpanOrder } from '../services/orderService';
 
 function OrderForm() {
   const { cart } = useCart();
+  const { menuById } = useMenu();
   const [form, setForm] = useState({
     nama: '',
     wa: '',
@@ -18,9 +19,10 @@ function OrderForm() {
   const [loading, setLoading] = useState(false);
   const [sukses, setSukses] = useState(false);
   const [orderNumber, setOrderNumber] = useState(null);
-  const cartEntries = Object.entries(cart);
+
+  const cartEntries = Object.entries(cart).filter(([id, qty]) => qty > 0 && menuById[id]);
   const subtotal = cartEntries.reduce((sum, [id, qty]) => {
-    const item = menuItems.find((menu) => menu.id === id);
+    const item = menuById[id];
     return sum + (item?.price || 0) * qty;
   }, 0);
   const ongkir = form.metode === 'delivery' ? 20000 : 0;
@@ -44,7 +46,7 @@ function OrderForm() {
   function buildWA(currentOrderNumber) {
     const items = cartEntries
       .map(([id, qty]) => {
-        const item = menuItems.find((menu) => menu.id === id);
+        const item = menuById[id];
         return `- ${item.name} x${qty} = Rp ${(item.price * qty).toLocaleString('id-ID')}`;
       })
       .join('\n');
@@ -60,7 +62,7 @@ ${form.metode === 'delivery' ? `Tanggal Antar: ${form.tanggal || '-'}
 Alamat: ${form.alamat || '-'}
 ` : ''}Waktu: ${form.waktu}
 Pembayaran: ${form.bayar}
-Tanggal Pesanan: ${form.tanggal || '-'}\n
+Tanggal Pesanan: ${form.tanggal || '-'}
 
 *Detail:*
 ${items}
@@ -70,17 +72,18 @@ Catatan: ${form.catatan || '-'}`;
   }
 
   async function handleOrder(via) {
-    const hasSpecialMenu = cartEntries.some(([id, qty]) => id === 'special' && qty > 0);
+    const hasSpecialMenu = cartEntries.some(([id, qty]) => menuById[id]?.isSpecial && qty > 0);
+    const validCart = Object.fromEntries(cartEntries);
 
     if (!form.nama) return alert('Nama tidak boleh kosong!');
     if (!form.wa) return alert('Nomor WhatsApp tidak boleh kosong!');
     if (!cartEntries.length) return alert('Pilih minimal 1 menu dulu! dengan menekan tombol + pada menu yang diinginkan');
     if (!form.tanggal) return alert('Pilih tanggal pengantaran/pickup!');
     if (form.metode === 'delivery' && !form.alamat) return alert('Alamat tidak boleh kosong untuk pengantaran!');
-    if (hasSpecialMenu && !form.catatan.trim()) {return alert('Untuk menu Cireng Kuah Creamy, wajib isi catatan varian rasa.');}
+    if (hasSpecialMenu && !form.catatan.trim()) return alert('Untuk menu unggulan, wajib isi catatan varian rasa.');
 
     const itemDetails = cartEntries.map(([id, qty]) => {
-      const item = menuItems.find((menu) => menu.id === id);
+      const item = menuById[id];
 
       return {
         id,
@@ -92,7 +95,7 @@ Catatan: ${form.catatan || '-'}`;
     });
 
     setLoading(true);
-    const result = await simpanOrder({ ...form, items: cart, itemDetails, total });
+    const result = await simpanOrder({ ...form, items: validCart, itemDetails, total });
     setLoading(false);
 
     if (!result.success) {
@@ -117,6 +120,7 @@ Catatan: ${form.catatan || '-'}`;
           {orderNumber ? <p style={{ color: '#6B3A1F', fontWeight: 700, marginBottom: '0.6rem' }}>No. Urut Pesanan: #{orderNumber}</p> : null}
           <p style={{ color: '#9C7A5A', fontStyle: 'italic', marginBottom: '1.5rem' }}>Terima kasih! Kami akan konfirmasi via WhatsApp segera.</p>
           <button
+            type="button"
             onClick={() => {
               setSukses(false);
               setOrderNumber(null);
@@ -154,7 +158,7 @@ Catatan: ${form.catatan || '-'}`;
               ) : (
                 <>
                   {cartEntries.map(([id, qty]) => {
-                    const item = menuItems.find((menu) => menu.id === id);
+                    const item = menuById[id];
                     return (
                       <div key={id} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: '0.88rem', color: '#6B3A1F' }}>
                         <span>{item.emoji} {item.name} x{qty}</span>
@@ -240,7 +244,7 @@ Catatan: ${form.catatan || '-'}`;
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ fontSize: '0.78rem', fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', color: '#6B3A1F', display: 'block', marginBottom: 7 }}>Catatan</label>
-              <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.catatan} onChange={(e) => updateForm('catatan', e.target.value)} placeholder="Mix Varian Rasa, mau versi mentah, dll..." />
+              <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.catatan} onChange={(e) => updateForm('catatan', e.target.value)} placeholder="Mix varian rasa, mau versi mentah, dll..." />
             </div>
 
             <div style={{ background: '#FFF9F0', borderRadius: 12, border: '1px solid #E8D5B0', padding: '1rem', marginBottom: '1rem', fontSize: '0.82rem', color: '#9C7A5A', fontStyle: 'italic', lineHeight: 1.6 }}>
@@ -248,6 +252,7 @@ Catatan: ${form.catatan || '-'}`;
             </div>
 
             <button
+              type="button"
               onClick={() => handleOrder('wa')}
               disabled={loading}
               style={{ background: '#25D366', color: 'white', border: 'none', padding: 14, borderRadius: 12, cursor: 'pointer', fontFamily: 'Georgia,serif', fontSize: '1rem', fontWeight: 600, width: '100%', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}

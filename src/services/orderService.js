@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   updateDoc
 } from 'firebase/firestore';
+import { utils, writeFileXLSX } from 'xlsx';
 
 const LOCAL_COUNTER_KEY = 'kedai-cigemuk-order-counter';
 
@@ -93,4 +94,46 @@ export async function updateOrderById(orderId, data) {
 
 export async function deleteOrderById(orderId) {
   await deleteDoc(doc(db, 'orders', orderId));
+}
+
+function formatExportDate(value) {
+  if (!value) {
+    return '-';
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value.toDate === 'function') {
+    return value.toDate().toLocaleString('id-ID');
+  }
+
+  return '-';
+}
+
+export function exportOrdersToExcel(orders) {
+  const rows = orders.map((order) => ({
+    ID: order.id,
+    NomorOrder: order.orderNumber || '-',
+    Nama: order.nama || '-',
+    WhatsApp: order.wa || '-',
+    Metode: order.metode || '-',
+    TanggalPesanan: order.tanggal || '-',
+    Waktu: order.waktu || '-',
+    Pembayaran: order.bayar || '-',
+    Status: order.status || 'pending',
+    Alamat: order.alamat || '-',
+    Catatan: order.catatan || '-',
+    Total: Number(order.total || 0),
+    DibuatPada: formatExportDate(order.createdAt),
+    Item: (order.itemDetails || [])
+      .map((item) => `${item.name} x${item.qty}`)
+      .join(', ')
+  }));
+
+  const worksheet = utils.json_to_sheet(rows);
+  const workbook = utils.book_new();
+  utils.book_append_sheet(workbook, worksheet, 'Orders');
+  writeFileXLSX(workbook, `orders-kedai-cigemuk-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
