@@ -190,6 +190,63 @@ a{text-decoration:none;color:inherit;}
   gap:16px;
 }
 
+.dashboard-section-switcher{
+  display:flex;
+  gap:12px;
+  padding:10px;
+  border-radius:24px;
+  background:rgba(255, 248, 241, 0.92);
+  border:1px solid #ebd6c3;
+  box-shadow:0 20px 45px rgba(76, 35, 14, 0.08);
+  width:max-content;
+  max-width:100%;
+  flex-wrap:wrap;
+}
+
+.dashboard-section-tab{
+  border:none;
+  border-radius:18px;
+  padding:14px 20px;
+  background:transparent;
+  color:#6e4128;
+  font-size:0.96rem;
+  font-weight:700;
+  transition:background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-section-tab.active{
+  background:linear-gradient(135deg, #c56a34, #8d4521);
+  color:#fff7ef;
+  box-shadow:0 12px 24px rgba(141, 69, 33, 0.22);
+}
+
+.dashboard-content-section{
+  display:grid;
+  gap:20px;
+}
+
+.dashboard-section-heading{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:flex-start;
+  padding:28px;
+  background:rgba(255, 250, 244, 0.88);
+  border:1px solid #ebd6c3;
+  border-radius:28px;
+  box-shadow:0 20px 45px rgba(76, 35, 14, 0.08);
+}
+
+.dashboard-section-heading h2{
+  font-size:1.7rem;
+  line-height:1.2;
+}
+
+.dashboard-section-eyebrow{
+  color:#9c5a32;
+  margin-bottom:10px;
+}
+
 .dashboard-metric,.dashboard-list,.dashboard-editor{
   background:#fffaf4;
   border:1px solid #ebd6c3;
@@ -485,7 +542,7 @@ a{text-decoration:none;color:inherit;}
     grid-template-columns:1fr;
   }
 
-  .dashboard-editor,.menu-editor{
+  .dashboard-editor,.menu-editor,.dashboard-section-heading{
     position:static;
   }
 }
@@ -505,6 +562,14 @@ a{text-decoration:none;color:inherit;}
     grid-template-columns:1fr;
   }
 
+  .dashboard-section-switcher{
+    width:100%;
+  }
+
+  .dashboard-section-tab{
+    flex:1 1 0;
+  }
+
   .dashboard-order-list,.menu-card-list{
     max-height:none;
     overflow:visible;
@@ -515,7 +580,7 @@ a{text-decoration:none;color:inherit;}
   .admin-auth-grid,.dashboard-grid,.dashboard-overview,.dashboard-form,.menu-management-grid{
     grid-template-columns:1fr;
   }
-  .dashboard-topbar,.dashboard-list-header,.dashboard-editor-header{
+  .dashboard-topbar,.dashboard-list-header,.dashboard-editor-header,.dashboard-section-heading{
     flex-direction:column;
     align-items:flex-start;
   }
