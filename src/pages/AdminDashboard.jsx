@@ -42,6 +42,24 @@ const EMPTY_MENU_FORM = {
   sortOrder: 0
 };
 
+function MenuVisual({ menu, fallbackEmoji }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (menu.photoUrl && !imageFailed) {
+    return (
+      <img
+        src={menu.photoUrl}
+        alt={menu.name}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={() => setImageFailed(true)}
+      />
+    );
+  }
+
+  return <span>{menu.emoji || fallbackEmoji}</span>;
+}
+
 function getOrderStatus(order) {
   return order.status || 'pending';
 }
@@ -327,14 +345,6 @@ function AdminDashboard() {
     } finally {
       setMenuBusyAction('');
     }
-  }
-
-  function renderMenuVisual(menu) {
-    if (menu.photoUrl) {
-      return <img src={menu.photoUrl} alt={menu.name} />;
-    }
-
-    return <span>{menu.emoji || getDefaultMenuEmoji()}</span>;
   }
 
   function handleSelectMenuCard(menu) {
@@ -737,7 +747,9 @@ function AdminDashboard() {
                     className={`menu-card ${selectedMenuId === menu.id ? 'active' : ''}`}
                     onClick={() => handleSelectMenuCard(menu)}
                   >
-                    <div className="menu-thumb">{renderMenuVisual(menu)}</div>
+                    <div className="menu-thumb">
+                      <MenuVisual menu={menu} fallbackEmoji={getDefaultMenuEmoji()} />
+                    </div>
                     <div className="menu-card-content">
                       <div className="dashboard-order-top">
                         <strong>{menu.name}</strong>
@@ -801,6 +813,10 @@ function AdminDashboard() {
                       onChange={(event) => updateMenuFormField('photoUrl', event.target.value)}
                       placeholder="https://..."
                     />
+                    <small>
+                      Harus berupa link gambar langsung, misalnya `.jpg`, `.png`, atau URL file dari Firebase
+                      Storage. Link halaman web biasa tidak bisa dipakai di `img src`.
+                    </small>
                   </label>
                   <label className="dashboard-form-span">
                     Deskripsi
