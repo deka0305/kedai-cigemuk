@@ -127,6 +127,20 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    match /counters/{counterId} {
+      allow get: if counterId == 'orders' || isAdmin();
+      allow list: if isAdmin();
+      allow create: if counterId == 'orders'
+        && request.resource.data.keys().hasOnly(['lastNumber', 'updatedAt'])
+        && request.resource.data.lastNumber is int
+        && request.resource.data.lastNumber == 1;
+      allow update: if counterId == 'orders'
+        && request.resource.data.keys().hasOnly(['lastNumber', 'updatedAt'])
+        && request.resource.data.lastNumber is int
+        && request.resource.data.lastNumber == resource.data.lastNumber + 1;
+      allow delete: if false;
+    }
+
     match /admins/{adminId} {
       allow read: if isAdmin();
       allow write: if isAdmin();
@@ -163,6 +177,8 @@ firebase deploy --only firestore:rules
 Hal penting:
 
 - Order dari halaman publik butuh izin `create` ke collection `orders`.
+- Order publik yang memakai nomor urut juga butuh `get` ke dokumen `counters/orders` untuk transaksi counter.
 - Dashboard admin butuh izin `read`, `update`, `delete` ke `orders`.
 - Login admin saja tidak cukup. User login itu juga harus punya dokumen di collection `admins`.
 - Kalau collection `admins` belum ada, buat admin pertama dulu lewat `/setup-admin`.
+- Versi kode terbaru punya fallback nomor order agar order tetap bisa tersimpan bila rules counter di production masih tertinggal, tapi rules tetap perlu dipublish supaya nomor urut kembali konsisten.

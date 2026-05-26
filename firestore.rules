@@ -17,7 +17,8 @@ service cloud.firestore {
     }
 
     match /counters/{counterId} {
-      allow read: if isAdmin();
+      allow get: if counterId == 'orders' || isAdmin();
+      allow list: if isAdmin();
       allow create: if counterId == 'orders'
         && request.resource.data.keys().hasOnly(['lastNumber', 'updatedAt'])
         && request.resource.data.lastNumber is int

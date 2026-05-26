@@ -1,5 +1,6 @@
 import { db } from '../firebase';
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -14,40 +15,100 @@ import { utils, writeFileXLSX } from 'xlsx';
 
 const ORDER_COUNTER_DOC = 'orders';
 
+function buildOrderPayload(dataOrder, orderNumber) {
+  return {
+    ...dataOrder,
+    status: dataOrder.status || 'baru',
+    orderNumber,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+}
+
+function buildFallbackOrderNumber(now = new Date()) {
+  const timestampParts = [
+    String(now.getFullYear()).slice(-2),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+    String(now.getHours()).padStart(2, '0'),
+    String(now.getMinutes()).padStart(2, '0'),
+    String(now.getSeconds()).padStart(2, '0')
+  ];
+  const randomSuffix = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+
+  return Number(`${timestampParts.join('')}${randomSuffix}`);
+}
+
+function isPermissionDenied(error) {
+  return error?.code === 'permission-denied'
+    || error?.message?.includes('Missing or insufficient permissions');
+}
+
+function getOrderErrorMessage(error) {
+  if (isPermissionDenied(error)) {
+    return 'Akses Firestore ditolak. Deploy rules terbaru agar checkout publik bisa menyimpan order.';
+  }
+
+  return error?.message || 'Terjadi kesalahan saat menyimpan order.';
+}
+
+async function saveOrderWithCounter(dataOrder) {
+  return runTransaction(db, async (transaction) => {
+    const counterRef = doc(db, 'counters', ORDER_COUNTER_DOC);
+    const orderRef = doc(collection(db, 'orders'));
+    const counterSnapshot = await transaction.get(counterRef);
+    const lastNumber = counterSnapshot.exists()
+      ? Number(counterSnapshot.data().lastNumber || 0)
+      : 0;
+    const orderNumber = lastNumber + 1;
+
+    transaction.set(
+      counterRef,
+      {
+        lastNumber: orderNumber,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    transaction.set(orderRef, buildOrderPayload(dataOrder, orderNumber));
+
+    return { id: orderRef.id, orderNumber };
+  });
+}
+
+async function saveOrderWithFallbackNumber(dataOrder) {
+  const orderNumber = buildFallbackOrderNumber();
+  const orderRef = await addDoc(
+    collection(db, 'orders'),
+    buildOrderPayload(dataOrder, orderNumber)
+  );
+
+  return { id: orderRef.id, orderNumber, usedFallbackOrderNumber: true };
+}
+
 export async function simpanOrder(dataOrder) {
   try {
-    const result = await runTransaction(db, async (transaction) => {
-      const counterRef = doc(db, 'counters', ORDER_COUNTER_DOC);
-      const orderRef = doc(collection(db, 'orders'));
-      const counterSnapshot = await transaction.get(counterRef);
-      const lastNumber = counterSnapshot.exists()
-        ? Number(counterSnapshot.data().lastNumber || 0)
-        : 0;
-      const orderNumber = lastNumber + 1;
-
-      transaction.set(
-        counterRef,
-        {
-          lastNumber: orderNumber,
-          updatedAt: serverTimestamp()
-        },
-        { merge: true }
-      );
-
-      transaction.set(orderRef, {
-        ...dataOrder,
-        status: dataOrder.status || 'baru',
-        orderNumber,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-
-      return { id: orderRef.id, orderNumber };
-    });
+    const result = await saveOrderWithCounter(dataOrder);
 
     return { success: true, id: result.id, orderNumber: result.orderNumber };
   } catch (error) {
-    return { success: false, error: error.message };
+    if (isPermissionDenied(error)) {
+      try {
+        const fallbackResult = await saveOrderWithFallbackNumber(dataOrder);
+
+        return {
+          success: true,
+          id: fallbackResult.id,
+          orderNumber: fallbackResult.orderNumber,
+          usedFallbackOrderNumber: true
+        };
+      } catch (fallbackError) {
+        return { success: false, error: getOrderErrorMessage(fallbackError) };
+      }
+    }
+
+    return { success: false, error: getOrderErrorMessage(error) };
   }
 }
 
