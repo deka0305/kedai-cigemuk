@@ -16,6 +16,19 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    match /counters/{counterId} {
+      allow read: if isAdmin();
+      allow create: if counterId == 'orders'
+        && request.resource.data.keys().hasOnly(['lastNumber', 'updatedAt'])
+        && request.resource.data.lastNumber is int
+        && request.resource.data.lastNumber == 1;
+      allow update: if counterId == 'orders'
+        && request.resource.data.keys().hasOnly(['lastNumber', 'updatedAt'])
+        && request.resource.data.lastNumber is int
+        && request.resource.data.lastNumber == resource.data.lastNumber + 1;
+      allow delete: if false;
+    }
+
     match /admins/{adminId} {
       allow read: if isAdmin();
       allow create: if isAdmin();

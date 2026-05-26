@@ -535,7 +535,11 @@ function AdminDashboard() {
             <div className="dashboard-editor">
               <div className="dashboard-editor-header">
                 <h2>Edit Order</h2>
-                {selectedOrder ? <span>ID: {selectedOrder.id}</span> : null}
+                {selectedOrder ? (
+                  <span>
+                    No. Urut: #{selectedOrder.orderNumber || '-'} · ID: {selectedOrder.id}
+                  </span>
+                ) : null}
               </div>
 
               {!selectedOrder ? (

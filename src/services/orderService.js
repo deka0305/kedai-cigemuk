@@ -1,72 +1,51 @@
 import { db } from '../firebase';
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
-  getDocs,
-  limit,
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   updateDoc
 } from 'firebase/firestore';
 import { utils, writeFileXLSX } from 'xlsx';
 
-const LOCAL_COUNTER_KEY = 'kedai-cigemuk-order-counter';
-
-function getLocalNextOrderNumber() {
-  if (typeof window === 'undefined') {
-    return 1;
-  }
-
-  const lastOrderNumber = Number(window.localStorage.getItem(LOCAL_COUNTER_KEY) || 0);
-  return lastOrderNumber + 1;
-}
-
-function saveLocalOrderNumber(orderNumber) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(LOCAL_COUNTER_KEY, String(orderNumber));
-}
-
-async function getNextOrderNumber() {
-  const ordersRef = collection(db, 'orders');
-  const latestOrderQuery = query(ordersRef, orderBy('orderNumber', 'desc'), limit(1));
-  const snapshot = await getDocs(latestOrderQuery);
-
-  if (snapshot.empty) {
-    return 1;
-  }
-
-  const latestOrder = snapshot.docs[0].data();
-  return (latestOrder.orderNumber || 0) + 1;
-}
+const ORDER_COUNTER_DOC = 'orders';
 
 export async function simpanOrder(dataOrder) {
   try {
-    let orderNumber;
+    const result = await runTransaction(db, async (transaction) => {
+      const counterRef = doc(db, 'counters', ORDER_COUNTER_DOC);
+      const orderRef = doc(collection(db, 'orders'));
+      const counterSnapshot = await transaction.get(counterRef);
+      const lastNumber = counterSnapshot.exists()
+        ? Number(counterSnapshot.data().lastNumber || 0)
+        : 0;
+      const orderNumber = lastNumber + 1;
 
-    try {
-      orderNumber = await getNextOrderNumber();
-    } catch {
-      orderNumber = getLocalNextOrderNumber();
-    }
+      transaction.set(
+        counterRef,
+        {
+          lastNumber: orderNumber,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
 
-    const docRef = await addDoc(collection(db, 'orders'), {
-      ...dataOrder,
-      status: dataOrder.status || 'baru',
-      orderNumber,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      transaction.set(orderRef, {
+        ...dataOrder,
+        status: dataOrder.status || 'baru',
+        orderNumber,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      return { id: orderRef.id, orderNumber };
     });
 
-    saveLocalOrderNumber(orderNumber);
-
-    return { success: true, id: docRef.id, orderNumber };
+    return { success: true, id: result.id, orderNumber: result.orderNumber };
   } catch (error) {
     return { success: false, error: error.message };
   }
