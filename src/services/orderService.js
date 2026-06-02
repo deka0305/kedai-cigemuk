@@ -112,17 +112,20 @@ export async function simpanOrder(dataOrder) {
   }
 }
 
-export function subscribeOrders(callback) {
+export function subscribeOrders(callback, onError) {
   const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
 
-  return onSnapshot(ordersQuery, (snapshot) => {
-    const orders = snapshot.docs.map((orderDoc) => ({
-      id: orderDoc.id,
-      ...orderDoc.data()
-    }));
-
-    callback(orders);
-  });
+  return onSnapshot(
+    ordersQuery,
+    (snapshot) => {
+      const orders = snapshot.docs.map((orderDoc) => ({
+        id: orderDoc.id,
+        ...orderDoc.data()
+      }));
+      callback(orders);
+    },
+    onError
+  );
 }
 
 export async function updateOrderById(orderId, data) {

@@ -196,6 +196,18 @@ function AdminDashboard() {
     }
   }, [orders, selectedOrder, selectedOrderId]);
 
+  const salesByMenuId = useMemo(() => {
+    const counts = {};
+    for (const order of orders) {
+      if (!Array.isArray(order.itemDetails)) continue;
+      for (const item of order.itemDetails) {
+        if (!item.id) continue;
+        counts[item.id] = (counts[item.id] || 0) + (Number(item.qty) || 0);
+      }
+    }
+    return counts;
+  }, [orders]);
+
   const managedMenus = useMemo(() => (hasRemoteMenus ? rawMenus : []), [hasRemoteMenus, rawMenus]);
   const selectedMenu = useMemo(
     () => managedMenus.find((menu) => menu.id === selectedMenuId) || null,
@@ -760,7 +772,7 @@ function AdminDashboard() {
                         {menu.isSpecial ? <span className="status-badge status-baru">Unggulan</span> : null}
                       </div>
                       <p>Rp {formatCurrency(menu.price)}</p>
-                      <small>{menu.photoUrl ? 'Foto aktif' : 'Pakai emoji default'}</small>
+                      <small>Terjual: {salesByMenuId[menu.id] || 0}x</small>
                     </div>
                   </button>
                 ))}
