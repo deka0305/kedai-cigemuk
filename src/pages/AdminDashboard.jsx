@@ -132,6 +132,7 @@ function AdminDashboard() {
   const { adminProfile, logoutAdmin } = useAdminAuth();
   const { menuItems, rawMenus, hasRemoteMenus } = useMenu();
   const [activeSection, setActiveSection] = useState('orders');
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('7');
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -207,6 +208,98 @@ function AdminDashboard() {
     }
     return counts;
   }, [orders]);
+
+  const analyticsData = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    function getOrderTimestamp(order) {
+      if (typeof order.createdAt?.toDate === 'function') return order.createdAt.toDate();
+      if (order.tanggal) return new Date(order.tanggal);
+      return null;
+    }
+
+    function inPeriod(order) {
+      if (analyticsPeriod === 'all') return true;
+      const d = getOrderTimestamp(order);
+      if (!d) return false;
+      return todayStart - d < Number(analyticsPeriod) * 24 * 60 * 60 * 1000;
+    }
+
+    const periodOrders = orders.filter(inPeriod);
+
+    const omzetSelesai = periodOrders
+      .filter((o) => getOrderStatus(o) === 'selesai')
+      .reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+    const omzetSemua = periodOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+    const avgOrder = periodOrders.length ? Math.round(omzetSemua / periodOrders.length) : 0;
+
+    const statusBreakdown = {};
+    for (const o of periodOrders) {
+      const s = getOrderStatus(o);
+      statusBreakdown[s] = (statusBreakdown[s] || 0) + 1;
+    }
+
+    const bayarBreakdown = {};
+    for (const o of periodOrders) {
+      const raw = o.bayar || 'Lainnya';
+      const label = raw.includes('COD') ? 'COD' : raw;
+      bayarBreakdown[label] = (bayarBreakdown[label] || 0) + 1;
+    }
+
+    const metodeBreakdown = { Pickup: 0, Delivery: 0 };
+    for (const o of periodOrders) {
+      if (o.metode === 'delivery') metodeBreakdown['Delivery']++;
+      else metodeBreakdown['Pickup']++;
+    }
+
+    const menuQty = {};
+    const menuNames = {};
+    for (const o of periodOrders) {
+      if (!Array.isArray(o.itemDetails)) continue;
+      for (const item of o.itemDetails) {
+        if (!item.id) continue;
+        menuQty[item.id] = (menuQty[item.id] || 0) + (Number(item.qty) || 0);
+        menuNames[item.id] = item.name || item.id;
+      }
+    }
+    const topMenus = Object.entries(menuQty)
+      .map(([id, qty]) => ({ id, name: menuNames[id], qty }))
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 5);
+    const maxMenuQty = topMenus[0]?.qty || 1;
+
+    const dailyData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
+      dailyData.push({ key, label, count: 0 });
+    }
+    for (const o of orders) {
+      const d = getOrderTimestamp(o);
+      if (!d) continue;
+      const key = d.toISOString().slice(0, 10);
+      const entry = dailyData.find((e) => e.key === key);
+      if (entry) entry.count++;
+    }
+    const maxDaily = Math.max(...dailyData.map((d) => d.count), 1);
+
+    return {
+      periodOrders,
+      omzetSelesai,
+      avgOrder,
+      statusBreakdown,
+      bayarBreakdown,
+      metodeBreakdown,
+      topMenus,
+      maxMenuQty,
+      dailyData,
+      maxDaily,
+    };
+  }, [orders, analyticsPeriod]);
 
   const managedMenus = useMemo(() => (hasRemoteMenus ? rawMenus : []), [hasRemoteMenus, rawMenus]);
   const selectedMenu = useMemo(
@@ -439,6 +532,13 @@ function AdminDashboard() {
           onClick={() => setActiveSection('menus')}
         >
           Menu
+        </button>
+        <button
+          type="button"
+          className={`dashboard-section-tab ${activeSection === 'analitik' ? 'active' : ''}`}
+          onClick={() => setActiveSection('analitik')}
+        >
+          Analitik
         </button>
       </section>
 
@@ -890,6 +990,171 @@ function AdminDashboard() {
               </div>
             </div>
           </section>
+        </section>
+      ) : null}
+
+      {activeSection === 'analitik' ? (
+        <section className="dashboard-content-section">
+          <div className="dashboard-section-heading">
+            <div>
+              <p className="admin-eyebrow dashboard-section-eyebrow">Analitik</p>
+              <h2>Ringkasan performa penjualan</h2>
+            </div>
+            <div className="menu-inline-actions" style={{ alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: '0.9rem', color: '#522817' }}>
+                Periode
+                <select
+                  value={analyticsPeriod}
+                  onChange={(e) => setAnalyticsPeriod(e.target.value)}
+                  style={{ borderRadius: 14, border: '1px solid #dfc9b5', padding: '10px 14px', fontSize: '0.95rem', background: '#fffdf9', color: '#2E1004' }}
+                >
+                  <option value="1">Hari ini</option>
+                  <option value="7">7 hari terakhir</option>
+                  <option value="30">30 hari terakhir</option>
+                  <option value="all">Semua waktu</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div className="analytics-metric-row">
+            <div className="analytics-metric-card">
+              <span>Total Pesanan</span>
+              <strong>{analyticsData.periodOrders.length}</strong>
+              <small>dalam periode ini</small>
+            </div>
+            <div className="analytics-metric-card highlight">
+              <span>Omzet (Selesai)</span>
+              <strong>Rp {formatCurrency(analyticsData.omzetSelesai)}</strong>
+              <small>dari pesanan berstatus selesai</small>
+            </div>
+            <div className="analytics-metric-card">
+              <span>Rata-rata Nilai Order</span>
+              <strong>Rp {formatCurrency(analyticsData.avgOrder)}</strong>
+              <small>rata-rata per pesanan</small>
+            </div>
+          </div>
+
+          <div className="analytics-charts-row">
+            <div className="analytics-card">
+              <h3>Pesanan 7 Hari Terakhir</h3>
+              <div className="analytics-bar-chart">
+                {analyticsData.dailyData.map((day) => (
+                  <div key={day.key} className="analytics-bar-item">
+                    <div className="analytics-bar-track">
+                      <div
+                        className="analytics-bar-fill"
+                        style={{ height: `${(day.count / analyticsData.maxDaily) * 100}%` }}
+                      />
+                    </div>
+                    <span className="analytics-bar-value">{day.count}</span>
+                    <span className="analytics-bar-label">{day.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="analytics-card">
+              <h3>Menu Terlaris</h3>
+              {analyticsData.topMenus.length === 0 ? (
+                <p style={{ color: '#8b5b40', marginTop: 12 }}>Belum ada data penjualan pada periode ini.</p>
+              ) : (
+                <div className="analytics-ranking">
+                  {analyticsData.topMenus.map((menu, i) => (
+                    <div key={menu.id} className="analytics-rank-item">
+                      <span className="analytics-rank-num">{i + 1}</span>
+                      <div className="analytics-rank-bar-wrap">
+                        <div className="analytics-rank-label-row">
+                          <span>{menu.name}</span>
+                          <span className="analytics-rank-qty">{menu.qty}x</span>
+                        </div>
+                        <div className="analytics-rank-track">
+                          <div
+                            className="analytics-rank-fill"
+                            style={{ width: `${(menu.qty / analyticsData.maxMenuQty) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="analytics-breakdown-row">
+            <div className="analytics-card">
+              <h3>Status Pesanan</h3>
+              {Object.keys(analyticsData.statusBreakdown).length === 0 ? (
+                <p style={{ color: '#8b5b40', marginTop: 8 }}>Belum ada data.</p>
+              ) : (
+                <div className="analytics-breakdown-list">
+                  {Object.entries(analyticsData.statusBreakdown).map(([status, count]) => (
+                    <div key={status} className="analytics-breakdown-item">
+                      <div className="analytics-breakdown-label-row">
+                        <span className={`status-badge status-${status}`}>{status}</span>
+                        <span>{count}</span>
+                      </div>
+                      <div className="analytics-breakdown-track">
+                        <div
+                          className="analytics-breakdown-fill"
+                          style={{ width: `${(count / analyticsData.periodOrders.length) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="analytics-card">
+              <h3>Metode Pembayaran</h3>
+              {Object.keys(analyticsData.bayarBreakdown).length === 0 ? (
+                <p style={{ color: '#8b5b40', marginTop: 8 }}>Belum ada data.</p>
+              ) : (
+                <div className="analytics-breakdown-list">
+                  {Object.entries(analyticsData.bayarBreakdown).map(([label, count]) => (
+                    <div key={label} className="analytics-breakdown-item">
+                      <div className="analytics-breakdown-label-row">
+                        <span>{label}</span>
+                        <span>{count}</span>
+                      </div>
+                      <div className="analytics-breakdown-track">
+                        <div
+                          className="analytics-breakdown-fill"
+                          style={{ width: `${(count / analyticsData.periodOrders.length) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="analytics-card">
+              <h3>Pickup vs Delivery</h3>
+              <div className="analytics-breakdown-list">
+                {Object.entries(analyticsData.metodeBreakdown).map(([label, count]) => (
+                  <div key={label} className="analytics-breakdown-item">
+                    <div className="analytics-breakdown-label-row">
+                      <span>{label}</span>
+                      <span>{count}</span>
+                    </div>
+                    <div className="analytics-breakdown-track">
+                      <div
+                        className="analytics-breakdown-fill"
+                        style={{
+                          width: analyticsData.periodOrders.length
+                            ? `${(count / analyticsData.periodOrders.length) * 100}%`
+                            : '0%',
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
       ) : null}
     </div>

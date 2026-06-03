@@ -3,6 +3,39 @@ import { useCart } from '../context/CartContext';
 import { useMenu } from '../context/MenuContext';
 import { simpanOrder } from '../services/orderService';
 
+const TIPS = [
+  { icon: '➕', text: 'Tekan tombol + pada menu di atas untuk menambahkan ke pesanan.' },
+  { icon: '📅', text: 'Pilih tanggal dan jam pengambilan atau pengiriman yang kamu inginkan.' },
+  { icon: '💬', text: 'Tekan tombol hijau — pesanan langsung masuk ke WhatsApp kami.' },
+  { icon: '⏰', text: 'Kami buka Senin–Kamis & Sabtu–Minggu pukul 15.00–20.00 WIB.' },
+];
+
+function TipsBanner() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ marginBottom: '1.25rem', borderRadius: 14, border: '1px solid #E8D5B0', overflow: 'hidden', background: '#FFF9F0' }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia,serif', fontSize: '0.88rem', fontWeight: 700, color: '#6B3A1F' }}
+      >
+        <span>💡 Pertama kali pesan? Baca panduan singkat ini</span>
+        <span style={{ fontSize: '0.75rem', color: '#C4703F', transition: 'transform 0.2s', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ padding: '4px 16px 14px', display: 'grid', gap: 10, borderTop: '1px solid #E8D5B0' }}>
+          {TIPS.map((tip) => (
+            <div key={tip.icon} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: '0.84rem', color: '#7b533d', lineHeight: 1.6 }}>
+              <span style={{ flexShrink: 0 }}>{tip.icon}</span>
+              <span>{tip.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function OrderForm() {
   const { cart } = useCart();
   const { menuById } = useMenu();
@@ -143,6 +176,7 @@ Catatan: ${form.catatan || '-'}`;
           Isi <em style={{ color: '#C4703F' }}>Pesanan</em> Kamu
         </h2>
         <div style={{ width: 60, height: 3, background: '#D4943A', borderRadius: 4, marginBottom: '2.5rem' }} />
+        <TipsBanner />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '2rem' }}>
           <div>
             <div style={{ background: '#FFF9F0', borderRadius: 16, border: '1px solid #E8D5B0', padding: '1.5rem', marginBottom: '1.2rem' }}>
@@ -247,7 +281,7 @@ Catatan: ${form.catatan || '-'}`;
               <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.catatan} onChange={(e) => updateForm('catatan', e.target.value)} placeholder="Mix varian rasa, mau versi mentah, dll..." />
             </div>
 
-            <div style={{ background: '#FFF9F0', borderRadius: 12, border: '1px solid #E8D5B0', padding: '1rem', marginBottom: '1rem', fontSize: '0.82rem', color: '#9C7A5A', fontStyle: 'italic', lineHeight: 1.6 }}>
+            <div style={{ background: '#FFF9F0', borderRadius: 12, border: '1px solid #E8D5B0', padding: '1rem', marginBottom: '1rem', fontSize: '1rem', color: '#e21313', fontStyle: 'italic', lineHeight: 1.6 }}>
               💡 Pesanan harus diteruskan via WhatsApp. Konfirmasi dalam +/-5 menit.
             </div>
 
