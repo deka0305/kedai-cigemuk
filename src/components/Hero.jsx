@@ -7,10 +7,10 @@ function Hero() {
         Kedai<br/><span style={{ color:'#C4703F',fontStyle:'italic' }}>Cigemuk</span>
       </h1>
       <p style={{ fontSize:'clamp(0.88rem,3vw,1.15rem)',color:'#6B3A1F',maxWidth:480,lineHeight:1.75,margin:'1rem auto 2rem',fontStyle:'italic',padding:'0 0.5rem' }}>
-        Cireng isi kuah creamy yang bikin nagih! Kenyal sempurna, kuah gurih & creamy, chilli oil yang menggoyang lidah.
+        Cireng isi, kuah creamy yang bikin nagih! Kenyal sempurna, kuah gurih & creamy, chilli oil yang menggoyang lidah.
       </p>
       <div style={{ display:'flex',gap:'1.5rem',justifyContent:'center',marginBottom:'2rem',flexWrap:'wrap' }}>
-        {[['7+','Varian Isi'],['Rp 3K','Mulai dari'],['15.00','Buka Setiap Hari']].map(([val,label]) => (
+        {[['7+','Varian Isi'],['Rp 3K','Mulai dari'],['15.00 - 20.00','Buka Setiap Hari Kecuali Jumat']].map(([val,label]) => (
           <div key={label} style={{ textAlign:'center' }}>
             <strong style={{ display:'block',fontFamily:'Georgia,serif',fontSize:'clamp(1.2rem,4vw,1.6rem)',fontWeight:900,color:'#C4703F' }}>{val}</strong>
             <span style={{ fontSize:'0.7rem',color:'#9C7A5A',letterSpacing:1.5,textTransform:'uppercase' }}>{label}</span>
