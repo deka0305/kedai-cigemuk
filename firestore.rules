@@ -40,5 +40,15 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
+
+    match /visitors/{visitorId} {
+      allow create: if request.resource.data.keys().hasOnly(['timestamp', 'isUnique', 'visitorId', 'device', 'referrer', 'path'])
+        && request.resource.data.isUnique is bool
+        && request.resource.data.visitorId is string
+        && request.resource.data.device is string
+        && request.resource.data.path is string;
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
   }
 }

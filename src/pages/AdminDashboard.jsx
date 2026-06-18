@@ -17,6 +17,7 @@ import {
   subscribeOrders,
   updateOrderById
 } from '../services/orderService';
+import { subscribeVisitors } from '../services/visitorService';
 
 const EMPTY_ORDER_FORM = {
   nama: '',
@@ -148,6 +149,7 @@ function AdminDashboard() {
   const [menuForm, setMenuForm] = useState(EMPTY_MENU_FORM);
   const [menuFeedback, setMenuFeedback] = useState('');
   const [menuBusyAction, setMenuBusyAction] = useState('');
+  const [visitors, setVisitors] = useState([]);
 
   useEffect(() => {
     const unsubscribe = subscribeOrders((incomingOrders) => {
@@ -155,6 +157,11 @@ function AdminDashboard() {
       setLoadingOrders(false);
     });
 
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeVisitors((data) => setVisitors(data));
     return unsubscribe;
   }, []);
 
@@ -300,6 +307,49 @@ function AdminDashboard() {
       maxDaily,
     };
   }, [orders, analyticsPeriod]);
+
+  const visitorData = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    function getVisitorTime(v) {
+      if (typeof v.timestamp?.toDate === 'function') return v.timestamp.toDate();
+      return null;
+    }
+
+    const totalVisits = visitors.length;
+    const uniqueVisitors = visitors.filter((v) => v.isUnique).length;
+
+    const todayVisits = visitors.filter((v) => {
+      const d = getVisitorTime(v);
+      return d && d >= todayStart;
+    }).length;
+
+    const deviceBreakdown = { mobile: 0, desktop: 0, tablet: 0 };
+    for (const v of visitors) {
+      const dev = v.device || 'desktop';
+      deviceBreakdown[dev] = (deviceBreakdown[dev] || 0) + 1;
+    }
+
+    const dailyVisits = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
+      dailyVisits.push({ key, label, count: 0 });
+    }
+    for (const v of visitors) {
+      const d = getVisitorTime(v);
+      if (!d) continue;
+      const key = d.toISOString().slice(0, 10);
+      const entry = dailyVisits.find((e) => e.key === key);
+      if (entry) entry.count++;
+    }
+    const maxDailyVisit = Math.max(...dailyVisits.map((d) => d.count), 1);
+
+    return { totalVisits, uniqueVisitors, todayVisits, deviceBreakdown, dailyVisits, maxDailyVisit };
+  }, [visitors]);
 
   const managedMenus = useMemo(() => (hasRemoteMenus ? rawMenus : []), [hasRemoteMenus, rawMenus]);
   const selectedMenu = useMemo(
@@ -1079,6 +1129,75 @@ function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="dashboard-section-heading" style={{ marginTop: 32 }}>
+            <div>
+              <p className="admin-eyebrow dashboard-section-eyebrow">Pengunjung</p>
+              <h2>Statistik kunjungan halaman</h2>
+            </div>
+          </div>
+
+          <div className="analytics-metric-row">
+            <div className="analytics-metric-card">
+              <span>Total Kunjungan</span>
+              <strong>{visitorData.totalVisits}</strong>
+              <small>semua waktu (maks 1000 terbaru)</small>
+            </div>
+            <div className="analytics-metric-card highlight">
+              <span>Pengunjung Unik</span>
+              <strong>{visitorData.uniqueVisitors}</strong>
+              <small>perangkat baru yang belum pernah berkunjung</small>
+            </div>
+            <div className="analytics-metric-card">
+              <span>Kunjungan Hari Ini</span>
+              <strong>{visitorData.todayVisits}</strong>
+              <small>sejak tengah malam</small>
+            </div>
+          </div>
+
+          <div className="analytics-charts-row">
+            <div className="analytics-card">
+              <h3>Kunjungan 7 Hari Terakhir</h3>
+              <div className="analytics-bar-chart">
+                {visitorData.dailyVisits.map((day) => (
+                  <div key={day.key} className="analytics-bar-item">
+                    <div className="analytics-bar-track">
+                      <div
+                        className="analytics-bar-fill"
+                        style={{ height: `${(day.count / visitorData.maxDailyVisit) * 100}%` }}
+                      />
+                    </div>
+                    <span className="analytics-bar-value">{day.count}</span>
+                    <span className="analytics-bar-label">{day.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="analytics-card">
+              <h3>Perangkat Pengunjung</h3>
+              <div className="analytics-breakdown-list">
+                {Object.entries(visitorData.deviceBreakdown).map(([device, count]) => (
+                  <div key={device} className="analytics-breakdown-item">
+                    <div className="analytics-breakdown-label-row">
+                      <span style={{ textTransform: 'capitalize' }}>{device}</span>
+                      <span>{count}</span>
+                    </div>
+                    <div className="analytics-breakdown-track">
+                      <div
+                        className="analytics-breakdown-fill"
+                        style={{
+                          width: visitorData.totalVisits
+                            ? `${(count / visitorData.totalVisits) * 100}%`
+                            : '0%',
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
